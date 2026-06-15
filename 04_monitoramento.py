@@ -187,12 +187,12 @@ def thread_inferencia(modelo, scaler, lado, stop_event):
                 stats["alertas"] += 1
                 # Identifica qual IP está sob ataque
                 prots = [p[FEATURE_COLS.index("protocol")] for p in janela]
-                print(f"[{ts}] 🚨 ATAQUE DETECTADO  "
+                print(f"[{ts}] ATAQUE DETECTADO  "
                       f"prob={prob:.3f}  "
                       f"pacotes_analisados={stats['total']}")
             else:
                 stats["normal"] += 1
-                print(f"[{ts}] ✅ Normal            "
+                print(f"[{ts}] Normal            "
                       f"prob={prob:.3f}  "
                       f"alertas_até_agora={stats['alertas']}")
 
