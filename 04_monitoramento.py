@@ -246,7 +246,7 @@ if __name__ == "__main__":
 
     try:
         sniff(
-            iface="wlp0s20f3",
+            iface=INTERFACE,
             filter=filtro_bpf,
             prn=callback_pacote,
             store=False,
