@@ -178,7 +178,7 @@ def thread_inferencia(modelo, scaler, lado, stop_event):
             janela_local = janela_local[STEP_SIZE:]    # desliza a janela
 
             vetor = montar_janela(janela)
-            prob, label = inferir(vetor, modelo, scaler, lado)
+            prob, label = inferir(vetor, lado)
 
             ts = time.strftime("%H:%M:%S")
             stats["total"]
