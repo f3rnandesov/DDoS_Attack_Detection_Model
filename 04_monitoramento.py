@@ -1,18 +1,3 @@
-# ================================================================
-#  PASSO 4 — Monitoramento em tempo real com modelo treinado
-#
-#  Captura pacotes ao vivo via Scapy, monta janelas deslizantes,
-#  classifica com a CNN e exibe alertas em tempo real.
-#
-#  Dispositivos monitorados:
-#    Master   : 10.42.0.100
-#    Worker 1 : 10.42.0.101  (LDR)
-#    Worker 2 : 10.42.0.102  (DHT11)
-#    Hotspot  : wlp0s20f3 do notebook
-#
-#  Uso:
-#    sudo python3 04_monitoramento.py
-# ================================================================
 
 import os, sys, time, warnings, collections, threading
 warnings.filterwarnings("ignore")

@@ -1,14 +1,4 @@
-# ================================================================
-#  PASSO 2 — Normalização + SMOTE + Divisão CORRETA
-#
-#  CORREÇÃO: Divisão ANTES do SMOTE e do Scaler
-#  para evitar Data Leakage
-#
-#  Entrada : outputs/dataset_janelas.npz
-#  Saída   : outputs/dados_treino.npz
-#            outputs/scaler.pkl
-#            graficos/distribuicao_classes.png
-# ================================================================
+
 
 import os
 import numpy as np
@@ -24,9 +14,7 @@ OUTPUT_NPZ    = "outputs/dados_treino.npz"
 OUTPUT_SCALER = "outputs/scaler.pkl"
 OUTPUT_GRAF   = "graficos/distribuicao_classes.png"
 
-# ════════════════════════════════════════════════════════════
 #  1. CARREGAR
-# ════════════════════════════════════════════════════════════
 def carregar(path):
     data = np.load(path)
     X, y = data["X"], data["y"]
@@ -35,10 +23,7 @@ def carregar(path):
     print(f"  Ataque  (1) : {(y==1).sum()}")
     return X, y
 
-# ════════════════════════════════════════════════════════════
-#  2. DIVISÃO PRIMEIRO — 65 / 15 / 20
-#     ⚠️  SMOTE e Scaler só depois, apenas no treino
-# ════════════════════════════════════════════════════════════
+#  2. DIVISÃO — 65 / 15 / 20
 def dividir(X, y):
     X_tr, X_tmp, y_tr, y_tmp = train_test_split(
         X, y, test_size=0.35, stratify=y, random_state=42)
@@ -51,9 +36,7 @@ def dividir(X, y):
     print(f"  Teste      : {X_te.shape[0]:>7}  |  N={( y_te==0).sum()}  A={(y_te==1).sum()}")
     return X_tr, X_val, X_te, y_tr, y_val, y_te
 
-# ════════════════════════════════════════════════════════════
 #  3. SCALER — fit APENAS no treino, transform nos demais
-# ════════════════════════════════════════════════════════════
 def normalizar(X_tr, X_val, X_te):
     scaler = MinMaxScaler()
     X_tr  = scaler.fit_transform(X_tr)   # fit+transform no treino
@@ -62,9 +45,7 @@ def normalizar(X_tr, X_val, X_te):
     print(f"\nScaler fit no treino. Range treino: [{X_tr.min():.3f}, {X_tr.max():.3f}]")
     return X_tr, X_val, X_te, scaler
 
-# ════════════════════════════════════════════════════════════
 #  4. SMOTE — apenas no conjunto de treino
-# ════════════════════════════════════════════════════════════
 def aplicar_smote(X_tr, y_tr):
     print(f"\nSMOTE apenas no treino:")
     print(f"  Antes : N={(y_tr==0).sum()}  A={(y_tr==1).sum()}")
@@ -73,9 +54,7 @@ def aplicar_smote(X_tr, y_tr):
     print(f"  Depois: N={(y_tr_bal==0).sum()}  A={(y_tr_bal==1).sum()}")
     return X_tr_bal, y_tr_bal
 
-# ════════════════════════════════════════════════════════════
 #  5. RESHAPE para Conv2D → (samples, H, W, 1)
-# ════════════════════════════════════════════════════════════
 def reshape_conv2d(X):
     n_samples, n_feat = X.shape
     lado = int(np.ceil(np.sqrt(n_feat)))
@@ -84,9 +63,7 @@ def reshape_conv2d(X):
         X = np.pad(X, ((0,0),(0,pad)), constant_values=0)
     return X.reshape(n_samples, lado, lado, 1).astype(np.float32), lado
 
-# ════════════════════════════════════════════════════════════
 #  6. GRÁFICO distribuição
-# ════════════════════════════════════════════════════════════
 def grafico_distribuicao(y_tr_orig, y_tr_bal, y_val, y_te):
     os.makedirs("graficos", exist_ok=True)
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -118,9 +95,7 @@ def grafico_distribuicao(y_tr_orig, y_tr_bal, y_val, y_te):
     plt.close()
     print(f"\nGráfico salvo: {OUTPUT_GRAF}")
 
-# ════════════════════════════════════════════════════════════
 #  MAIN
-# ════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     print("="*55)
     print("  PASSO 2 — Pré-processamento (SEM data leakage)")
@@ -128,7 +103,7 @@ if __name__ == "__main__":
 
     X, y = carregar(INPUT_NPZ)
 
-    # 1. Divide PRIMEIRO
+    # 1. Divide
     X_tr, X_val, X_te, y_tr, y_val, y_te = dividir(X, y)
     y_tr_orig = y_tr.copy()
 

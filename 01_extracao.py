@@ -1,19 +1,9 @@
-# ================================================================
-#  PASSO 1 — Extração de features + Janelas deslizantes
-#  Projeto: Detecção de DDoS em IoT com CNN
-#
-#  Entrada : dataset_pcap/normal.pcapng
-#            dataset_pcap/ataque.pcapng
-#  Saída   : outputs/dataset_janelas.npz  (X, y prontos)
-#            outputs/dataset_raw.csv       (pacotes brutos)
-# ================================================================
 
 import os
 import numpy as np
 import pandas as pd
 from scapy.all import rdpcap, IP, TCP, UDP, ICMP
 
-# ── Configurações ────────────────────────────────────────────
 PCAP_NORMAL = "dataset_pcap/normal.pcapng"
 PCAP_ATAQUE = "dataset_pcap/DoS_traffic.pcapng"
 
@@ -38,9 +28,7 @@ FEATURE_COLS = [
     "tcp_flags", "is_syn", "tcp_payload"
 ]
 
-# ════════════════════════════════════════════════════════════
 #  1. EXTRAÇÃO DE FEATURES DOS PCAPNG
-# ════════════════════════════════════════════════════════════
 def extrair_pacotes(filepath, label):
     """
     Lê um arquivo pcapng e extrai features de cada pacote IP.
@@ -88,9 +76,7 @@ def extrair_pacotes(filepath, label):
     return df
 
 
-# ════════════════════════════════════════════════════════════
 #  2. JANELAS DESLIZANTES → features estatísticas
-# ════════════════════════════════════════════════════════════
 def construir_janelas(df, window_size, step_size):
     """
     Cria janelas deslizantes de `window_size` pacotes.
@@ -148,9 +134,6 @@ def construir_janelas(df, window_size, step_size):
     return X, y
 
 
-# ════════════════════════════════════════════════════════════
-#  MAIN
-# ════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     os.makedirs("outputs", exist_ok=True)
 

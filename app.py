@@ -35,8 +35,7 @@ def detectar():
         v_padded = np.pad(v_scaled, ((0, 0), (0, 5)), mode='constant', constant_values=0)
         X_img = v_padded.reshape(1, LADO, LADO, 1).astype(np.float32)
         
-        # --- CORREÇÃO DA MEMÓRIA AQUI ---
-        # Chamamos o modelo diretamente. Consome uma fração da RAM do .predict()
+    
         predicao = modelo(X_img, training=False)
         prob = float(predicao.numpy()[0][0])
         

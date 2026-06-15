@@ -1,13 +1,3 @@
-# ================================================================
-#  PASSO 3 — Modelo Conv2D + Treino + Avaliação gráfica
-#
-#  Entrada : outputs/dados_treino.npz
-#  Saída   : models/modelo_ddos.keras
-#            graficos/curvas_treino.png
-#            graficos/matriz_confusao.png
-#            graficos/curva_roc.png
-#            graficos/metricas_barras.png
-# ================================================================
 
 import os, warnings
 warnings.filterwarnings("ignore")
