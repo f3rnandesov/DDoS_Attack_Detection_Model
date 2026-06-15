@@ -107,20 +107,31 @@ import requests
 import requests
 import os
 
+
+
+# Defina a URL que o Render te deu (está no painel do Render)
+URL_API = "https://api-detection-ddos-iot.onrender.com/detectar"
+API_KEY = "minha_chave_secreta_2026" # A mesma que você colocou no Render
+
 def inferir(vetor, lado):
-    headers = {"X-API-KEY": "sua_chave_secreta_2026"} # Mesma chave do Render
+    headers = {"X-API-KEY": API_KEY}
     payload = {"features": vetor.tolist()}
     
     try:
-        response = requests.post("https://api-detection-ddos-iot.onrender.com/detectar", 
-                                 json=payload, 
-                                 headers=headers)
-        resultado = response.json()
-        return resultado['probabilidade'], resultado['classificacao']
+        # Faz o envio para a nuvem
+        response = requests.post(URL_API, json=payload, headers=headers)
+        
+        # Verifica se deu tudo certo
+        if response.status_code == 200:
+            resultado = response.json()
+            return resultado['probabilidade'], resultado['classificacao']
+        else:
+            print(f"Erro na API ({response.status_code}): {response.text}")
+            return 0, "Erro"
+            
     except Exception as e:
-        print(f"Erro: {e}")
+        print(f"Falha ao conectar com a nuvem: {e}")
         return 0, "Erro"
-
 # ════════════════════════════════════════════════════════════
 #  CALLBACK do Scapy — chamado a cada pacote capturado
 # ════════════════════════════════════════════════════════════
