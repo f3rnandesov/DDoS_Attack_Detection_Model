@@ -102,22 +102,24 @@ def montar_janela(janela):
 # ════════════════════════════════════════════════════════════
 #  INFERÊNCIA com Conv2D
 # ════════════════════════════════════════════════════════════
-def inferir(vetor, modelo, scaler, lado):
-    # Normaliza
-    v_scaled = scaler.transform(vetor.reshape(1, -1))
+import requests
 
-    # Padding e reshape (igual ao treino)
-    n_feat = v_scaled.shape[1]
-    pad    = lado * lado - n_feat
-    if pad > 0:
-        v_scaled = np.pad(v_scaled, ((0,0),(0,pad)), constant_values=0)
+import requests
+import os
 
-    X_img = v_scaled.reshape(1, lado, lado, 1).astype(np.float32)
-
-    prob  = modelo.predict(X_img, verbose=0)[0][0]
-    label = 1 if prob >= THRESHOLD else 0
-    return float(prob), label
-
+def inferir(vetor, lado):
+    headers = {"X-API-KEY": "sua_chave_secreta_2026"} # Mesma chave do Render
+    payload = {"features": vetor.tolist()}
+    
+    try:
+        response = requests.post("https://api-detection-ddos-iot.onrender.com/detectar", 
+                                 json=payload, 
+                                 headers=headers)
+        resultado = response.json()
+        return resultado['probabilidade'], resultado['classificacao']
+    except Exception as e:
+        print(f"Erro: {e}")
+        return 0, "Erro"
 
 # ════════════════════════════════════════════════════════════
 #  CALLBACK do Scapy — chamado a cada pacote capturado
