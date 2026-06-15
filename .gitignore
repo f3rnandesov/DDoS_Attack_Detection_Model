@@ -1,0 +1,12 @@
+# Ambientes virtuais
+.venv_ddos_IoT/
+venv/
+env/
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Arquivos do sistema operacional
+.DS_Store
+.vscode/
