@@ -8,7 +8,7 @@
 #    Master   : 10.42.0.100
 #    Worker 1 : 10.42.0.101  (LDR)
 #    Worker 2 : 10.42.0.102  (DHT11)
-#    Hotspot  : wlan0 do notebook
+#    Hotspot  : wlp0s20f3 do notebook
 #
 #  Uso:
 #    sudo python3 04_monitoramento.py
@@ -21,6 +21,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import numpy as np
 import joblib
 import tensorflow as tf
+import requests
 from scapy.all import sniff, IP, TCP, UDP
 
 # ── Configurações ────────────────────────────────────────────
@@ -100,28 +101,18 @@ def montar_janela(janela):
 
 
 # ════════════════════════════════════════════════════════════
-#  INFERÊNCIA com Conv2D
+#  INFERÊNCIA COM A API DO RENDER
 # ════════════════════════════════════════════════════════════
-import requests
-
-import requests
-import os
-
-
-
-# Defina a URL que o Render te deu (está no painel do Render)
 URL_API = "https://api-detection-ddos-iot.onrender.com/detectar"
-API_KEY = "minha_chave_secreta_2026" # A mesma que você colocou no Render
+API_KEY = "minha_chave_secreta_2026"
 
 def inferir(vetor, lado):
     headers = {"X-API-KEY": API_KEY}
     payload = {"features": vetor.tolist()}
     
     try:
-        # Faz o envio para a nuvem
-        response = requests.post(URL_API, json=payload, headers=headers)
+        response = requests.post(URL_API, json=payload, headers=headers, timeout=10)
         
-        # Verifica se deu tudo certo
         if response.status_code == 200:
             resultado = response.json()
             return resultado['probabilidade'], resultado['classificacao']
@@ -132,6 +123,8 @@ def inferir(vetor, lado):
     except Exception as e:
         print(f"Falha ao conectar com a nuvem: {e}")
         return 0, "Erro"
+
+
 # ════════════════════════════════════════════════════════════
 #  CALLBACK do Scapy — chamado a cada pacote capturado
 # ════════════════════════════════════════════════════════════
@@ -156,7 +149,6 @@ def callback_pacote(pkt):
 # ════════════════════════════════════════════════════════════
 def thread_inferencia(modelo, scaler, lado, stop_event):
     janela_local = []
-    contador     = 0
 
     print(f"\n{'='*60}")
     print(f"  Monitoramento ativo — threshold={THRESHOLD}")
@@ -164,7 +156,7 @@ def thread_inferencia(modelo, scaler, lado, stop_event):
     print(f"{'='*60}\n")
 
     while not stop_event.is_set():
-        time.sleep(0.05)   # verifica buffer a cada 50ms
+        time.sleep(0.05)
 
         with buffer_lock:
             novos = list(packet_buffer)
@@ -172,33 +164,30 @@ def thread_inferencia(modelo, scaler, lado, stop_event):
 
         janela_local.extend(novos)
 
-        # Inferência a cada STEP_SIZE pacotes novos (janela cheia)
         while len(janela_local) >= WINDOW_SIZE:
             janela = janela_local[:WINDOW_SIZE]
-            janela_local = janela_local[STEP_SIZE:]    # desliza a janela
+            janela_local = janela_local[STEP_SIZE:]
 
             vetor = montar_janela(janela)
             prob, label = inferir(vetor, lado)
 
             ts = time.strftime("%H:%M:%S")
-            stats["total"]
 
-            if label == 1:
+            # --- CORREÇÃO AQUI: Compara com a String "Ataque" retornada pela API ---
+            if label == "Ataque":
                 stats["alertas"] += 1
-                # Identifica qual IP está sob ataque
-                prots = [p[FEATURE_COLS.index("protocol")] for p in janela]
                 print(f"[{ts}] ATAQUE DETECTADO  "
                       f"prob={prob:.3f}  "
-                      f"pacotes_analisados={stats['total']}")
+                      f"alertas_até_agora={stats['alertas']}")
             else:
                 stats["normal"] += 1
                 print(f"[{ts}] Normal            "
                       f"prob={prob:.3f}  "
                       f"alertas_até_agora={stats['alertas']}")
 
-        # Relatório a cada 60 segundos
+        # Relatório a cada 200 pacotes totais analisados
         if stats["total"] > 0 and stats["total"] % 200 == 0:
-            total    = stats["alertas"] + stats["normal"]
+            total = stats["alertas"] + stats["normal"]
             if total > 0:
                 taxa = stats["alertas"] / total * 100
                 print(f"\n{'─'*60}")
@@ -217,23 +206,21 @@ if __name__ == "__main__":
         print("[ERRO] Execute com sudo: sudo python3 04_monitoramento.py")
         sys.exit(1)
 
-    # Carrega modelo e scaler
-    print("Carregando modelo...")
-    modelo = tf.keras.models.load_model(MODEL_PATH)
+    print("Carregando configurações locais...")
     scaler = joblib.load(SCALER_PATH)
 
-    # Descobre lado do quadrado (mesmo do treino)
+    # Descobre lado do quadrado para fins informativos
     dados = np.load("outputs/dados_treino.npz")
     lado  = int(dados["lado"][0])
-    print(f"Modelo carregado  : {MODEL_PATH}")
-    print(f"Input shape Conv2D: {lado}×{lado}×1")
-    print(f"Interface de rede : {INTERFACE}")
+    print(f"Scaler carregado    : {SCALER_PATH}")
+    print(f"Input shape Conv2D  : {lado}×{lado}×1")
+    print(f"Interface de rede   : {INTERFACE}")
 
     # Inicia thread de inferência
     stop_event = threading.Event()
     t = threading.Thread(
         target=thread_inferencia,
-        args=(modelo, scaler, lado, stop_event),
+        args=(None, scaler, lado, stop_event), # O modelo roda remoto, passamos None para o lugar do modelo local
         daemon=True
     )
     t.start()
