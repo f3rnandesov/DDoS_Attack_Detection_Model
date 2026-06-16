@@ -4,10 +4,10 @@
 
 ```
 ddos_iot/
-├── 01_extracao.py          # Extrai features dos pcapng + janelas deslizantes
-├── 02_preprocessamento.py  # Normalização + SMOTE + divisão treino/val/teste
-├── 03_treino.py            # CNN2D + treino + avaliação gráfica completa
-├── 04_monitoramento.py     # Monitoramento em tempo real com modelo treinado
+├── extracao.py          # Extrai features dos pcapng + janelas deslizantes
+├── preprocessamento.py  # Normalização + SMOTE + divisão treino/val/teste
+├── treino.py            # CNN2D + treino + avaliação gráfica completa
+├── monitoramento.py     # Monitoramento em tempo real com modelo treinado
 ├── requirements.txt
 ├── dataset_pcap/           # Coloque seus arquivos aqui
 │   ├── normal.pcapng
@@ -27,20 +27,20 @@ pip install -r requirements.txt
 
 ### Passo 1 — Extração
 ```bash
-python3 01_extracao.py
+python3 extracao.py
 ```
 Gera: `outputs/dataset_janelas.npz`, `outputs/dataset_raw.csv`
 
 ### Passo 2 — Pré-processamento
 ```bash
-python3 02_preprocessamento.py
+python3 preprocessamento.py
 ```
 Gera: `outputs/dados_treino.npz`, `outputs/scaler.pkl`,
       `graficos/distribuicao_classes.png`
 
 ### Passo 3 — Treino e avaliação
 ```bash
-python3 03_treino.py
+python3 treino.py
 ```
 Gera:
 - `models/modelo_ddos.keras`
@@ -52,7 +52,7 @@ Gera:
 
 ### Passo 4 — Monitoramento ao vivo
 ```bash
-sudo python3 04_monitoramento.py
+sudo python3 monitoramento.py
 ```
 Monitora os Workers e Master em tempo real, classificando janelas de
 pacotes a cada 5 novos pacotes capturados.
